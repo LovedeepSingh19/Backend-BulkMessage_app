@@ -10,7 +10,7 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
 mongoose
-  .connect(process.env.DATABASE_URL)
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("Connected to mongo `Successful"))
   .catch((err) => console.log("error " + err));
 
