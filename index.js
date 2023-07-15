@@ -6,7 +6,7 @@ require("dotenv").config();
 const port = 8080 || process.env.PORT;
 
 var corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: 'https://vercel.live/link/backend-bulk-message-app-git-main-lovedeepsingh19.vercel.app?via=deployment-domains-list-branch',
   optionsSuccessStatus: 200 // some 
 }
  
