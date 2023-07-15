@@ -242,7 +242,7 @@ router.post("/userUpdate", async (req, res) => {
     if (!updatedUser) {
       await User.create(user);
     }
-
+    console.log(updatedUser)
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Error while Updating User:", error);
