@@ -12,6 +12,10 @@ const client = require("twilio")(
   process.env.AUTH_TOKEN
 );
 
+router.get("/", async (req, res) => {
+  res.status(200).json({body: "SERVER WORKING"})
+})
+
 const Contact = require("../models/contacts");
 const Message = require("../models/messages");
 const User = require("../models/currentUser");
