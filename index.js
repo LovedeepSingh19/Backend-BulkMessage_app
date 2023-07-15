@@ -5,15 +5,6 @@ require("dotenv").config();
 
 const port = 8080 || process.env.PORT;
 
-var corsOptions = {
-  origin: 'https://backend-bulk-message-ku85kngjn-lovedeepsingh19.vercel.app',
-  optionsSuccessStatus: 200 // some 
-}
- 
-// app.get('/products/:id', cors(corsOptions), function (req, res, next) {
-//   res.json({msg: 'This is CORS-enabled for only example.com.'})
-// })
-
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
@@ -23,7 +14,12 @@ mongoose
   .then(() => console.log("Connected to mongo `Successful"))
   .catch((err) => console.log("error " + err));
 
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: "https://backend-bulk-message.onrender.com",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}
+));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(require("./routes/routes"));
