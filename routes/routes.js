@@ -252,6 +252,7 @@ router.post("/userUpdate", async (req, res) => {
 
 router.get("/fetchMessages", async (req, res) => {
   const { createdBy } = req.query;
+  console.log(createdBy)
 
   try {
     const messages = await Message.find({ createdBy });
