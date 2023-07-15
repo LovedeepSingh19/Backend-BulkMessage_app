@@ -15,7 +15,7 @@ mongoose
   .catch((err) => console.log("error " + err));
 
 app.use(cors({
-  origin: "https://backend-bulk-message.onrender.com",
+  origin: "https://localhost:3000",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }
