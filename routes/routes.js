@@ -233,6 +233,7 @@ res.status(201).json({msg: "You should receive your SMS",});
 
 router.post("/userUpdate", async (req, res) => {
   const { user } = req.body;
+  console.log("User:"+user)
   try {
     const updatedUser = await User.findOneAndUpdate(
       { email: user.email },
