@@ -11,14 +11,24 @@ const client = require("twilio")(
   process.env.ACCOUNT_SID,
   process.env.AUTH_TOKEN
 );
+const Message = require("../models/messages");
 
 router.get("/", async (req, res) => {
-  const mes = Message.find({}).exec()
+  Message.find({}).toArray((err, documents) => {
+    if (err) {
+      console.error("Error retrieving documents:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    console.log("Retrieved documents:", documents);
+
+    // Send the documents as the HTTP response
+    res.status(200).json({ data: documents });
+  });
   res.status(200).json({body: "SERVER WORKING", msg:mes})
 })
 
 const Contact = require("../models/contacts");
-const Message = require("../models/messages");
 const User = require("../models/currentUser");
 
 router.post("/manual-contacts", async (req, res) => {
