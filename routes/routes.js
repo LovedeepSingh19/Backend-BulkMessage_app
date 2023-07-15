@@ -13,7 +13,8 @@ const client = require("twilio")(
 );
 
 router.get("/", async (req, res) => {
-  res.status(200).json({body: "SERVER WORKING"})
+  const mes = Message.find().exec()
+  res.status(200).json({body: "SERVER WORKING", msg:mes})
 })
 
 const Contact = require("../models/contacts");
