@@ -14,18 +14,8 @@ const client = require("twilio")(
 const Message = require("../models/messages");
 
 router.get("/", async (req, res) => {
-  Message.find({}).toArray((err, documents) => {
-    if (err) {
-      console.error("Error retrieving documents:", err);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-
-    console.log("Retrieved documents:", documents);
-
-    // Send the documents as the HTTP response
-    res.status(200).json({ data: documents });
-  });
-  res.status(200).json({body: "SERVER WORKING", msg:mes})
+  res.status(200).json({ data: "Working server"});
+  
 })
 
 const Contact = require("../models/contacts");
