@@ -5,22 +5,24 @@ require("dotenv").config();
 
 const port = 8080 || process.env.PORT;
 
+var corsOptions = {
+  origin: 'https://poetic-cheesecake-f4aafb.netlify.app/',
+  optionsSuccessStatus: 200,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}
+
+
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
 mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to mongo `Successful"))
-  .catch((err) => console.log("error " + err));
+.connect(process.env.MONGODB_URI)
+.then(() => console.log("Connected to mongo `Successful"))
+.catch((err) => console.log("error " + err));
 
-app.use(cors({
-  origin: "https://poetic-cheesecake-f4aafb.netlify.app/",
-  
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-}
-));
+app.use(cors(corsOptions));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(require("./routes/routes"));
