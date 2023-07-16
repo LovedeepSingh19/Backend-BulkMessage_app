@@ -15,7 +15,7 @@ mongoose
   .catch((err) => console.log("error " + err));
 
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "https://poetic-cheesecake-f4aafb.netlify.app/",
   
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
