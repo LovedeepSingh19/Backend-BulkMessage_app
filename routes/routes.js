@@ -149,14 +149,14 @@ router.post("/sendMessage", async (req, res) => {
       try {
         
         wbm
-          .start({ qrCodeData: true, session: false, showBrowser: false })
-          .then((e)=>{wbm.waitQRCode();console.log(e)})
-      //       console.log(qrCodeData); // show data used to generate QR Code
-      //       const messages = message.body;
-      //       res
-      //         .status(200)
-      //         .json({ phones: phoneNumbers, qr: qrCodeData, messages: messages }); // Send the QR code data as the response
-      //     })
+          .start({ qrCodeData: true, session: true, showBrowser: false })
+          .then(async (qrCodeData) => {
+            console.log(qrCodeData); // show data used to generate QR Code
+            const messages = message.body;
+            res
+              .status(200)
+              .json({ phones: phoneNumbers, qr: qrCodeData, messages: messages }); // Send the QR code data as the response
+          })
       } catch (error) {
         
         console.log("err whatsApp: ", error);
