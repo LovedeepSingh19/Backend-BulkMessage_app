@@ -53,22 +53,6 @@ router.post("/manual-contacts", async (req, res) => {
   }
 });
 
-router.post("/qr-whatsApp", async (req, res) => {
-  try {
-    const { phones, messages } = req.body;
-    console.log(phones, messages)
-
-    await wbm.waitQRCode();
-    res.status(200).json({ Success: true });
-
-    await wbm.send(phones, messages);
-    await wbm.end();
-  } catch (error) {
-    console.log("Error: ", error);
-    res.status(500).json({ Success: false, error: error.message });
-  }
-});
-
 
 router.post("/getContacts", async (req, res) => {
   const { uid } = req.body;
@@ -139,9 +123,9 @@ router.post("/sendMessage", async (req, res) => {
     // console.log(message);
     await Message.create(message);
     const intersection = await Contact.aggregate([
-      // Match users with a phone number
+
       { $match: { phone: { $exists: true, $ne: "" } } },
-      // Match the user with the specific _id
+
       { $match: { createdBy: message.createdBy } },
     ]);
     intersection.map((value) => phoneNumbers.push(value.phone));
@@ -149,20 +133,21 @@ router.post("/sendMessage", async (req, res) => {
     //If WhatsAPP Message
 
     if (message.whatsApp) {
-      console.log("whatsapp");
+
       wbm
         .start({ qrCodeData: true, session: true, showBrowser: false })
-        .then((qrCodeData) => {
-          console.log(qrCodeData); // show data used to generate QR Code
+        .then(async (qrCodeData) => {
+
           const messages = message.body;
-          res.status(200).json({ phones: phoneNumbers, qr: qrCodeData, messages: messages }); // Send the QR code data as the response
+          res.status(200).json({ qr: qrCodeData });
+          await wbm.waitQRCode();
+      
+          await wbm.send(phoneNumbers, messages);
+          await wbm.end();
         })
         .catch((error) => {
           console.log("err whatsApp: ", error);
         });
-
-    
-          // res.status(500).send("An error occurred"); // Send an error response if there's an error
     }
 
     // if Email Message
@@ -227,14 +212,15 @@ router.post("/sendMessage", async (req, res) => {
       sendBulkMessages(message.body, phoneNumberSMS);
 
       res.status(201).json({ msg: "You should receive your SMS" });
-
-
-    } else {
-      console.error("Error Sending Bulk Message: mf else res");
-      // res
-      //   .status(200)
-      //   .json({ message: "Message added to Database successfully" });
     }
+    if(!message.sms && !message.email && !message.whatsApp){
+
+      console.error("Error Sending Bulk Message: mf else res");
+      res
+        .status(200)
+        .json({ message: "Message added to Database successfully" });
+    }
+
 
     // sendBulkMessages(message.body, phoneNumbers);
   } catch (error) {
