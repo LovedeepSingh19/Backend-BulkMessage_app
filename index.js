@@ -17,7 +17,7 @@ mongoose
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(require("./routes/routes"));
+app.use(require("./api/routes"));
 
 const server = app.listen(port, () => {
   console.log("server running on Port: " + port);
