@@ -195,9 +195,9 @@ router.post("/sendMessage", async (req, res) => {
           pass: process.env.GOOGLE_APP_PASSWORD,
         },
       };
-
+    
       let transporter = nodemailer.createTransport(config);
-
+    
       let mailgen = new MailGen({
         theme: "default",
         product: {
@@ -205,7 +205,7 @@ router.post("/sendMessage", async (req, res) => {
           link: "https://mailgen.js/",
         },
       });
-
+    
       let response = {
         body: {
           name: "",
@@ -215,30 +215,29 @@ router.post("/sendMessage", async (req, res) => {
           },
         },
       };
-
+    
       let mail = mailgen.generate(response);
-
+    
       intersection.map((value) => emails.push(value.email));
-
-      for (let email of emails) {
-        let message = {
-          from: process.env.GOOGLE_USERNAME,
-          to: email,
-          subject: "Bulk Message",
-          html: mail,
-        };
-
-        transporter
-          .sendMail(message)
-          .then(() => {
-            console.log(`Email sent to ${email}`);
-          })
-          .catch((e) => {
-            console.error(`Failed to send email to ${email}:`, error);
-          });
+    
+      try {
+          let message = {
+            from: process.env.GOOGLE_USERNAME,
+            to: [emails],
+            subject: "Bulk Message",
+            html: mail,
+          };
+    
+          await transporter.sendMail(message);
+          console.log(`Email sent to ${emails}`);
+    
+        res.status(201).json({ msg: "You should receive an email" });
+      } catch (error) {
+        console.error("Failed to send email:", error);
+        res.status(500).json({ error: "Failed to send email" });
       }
-      res.status(201).json({ msg: "You should receive an email" });
     }
+    
 
     // if SMS
 
