@@ -2,7 +2,7 @@ const express = require("express");
 require("dotenv/config");
 const router = express.Router();
 
-// const wbm = require("wbm");
+const wbm = require("wbm");
 
 const nodemailer = require("nodemailer");
 const MailGen = require("mailgen");
@@ -14,23 +14,22 @@ const client = require("twilio")(
 const Message = require("../models/messages");
 
 router.get("/", async (req, res) => {
-  res.status(200).json({ data: "Working server"});
-  
-})
+  res.status(200).json({ data: "Working server" });
+});
 
 const Contact = require("../models/contacts");
 const User = require("../models/currentUser");
 
 router.post("/manual-contacts", async (req, res) => {
   const { participants } = req.body;
-  console.log(participants)
+  console.log(participants);
 
   try {
     for (const participant of participants) {
       const { email, phone, createdBy } = participant;
 
       const existingContact = await Contact.findOne({
-        $and: [{ email }, {createdBy} , { phone }],
+        $and: [{ email }, { createdBy }, { phone }],
       });
 
       if (!existingContact) {
@@ -111,7 +110,7 @@ function sendBulkMessages(messageBody, numberList) {
 router.post("/sendMessage", async (req, res) => {
   const { message } = req.body;
   const phoneNumbers = [];
-  const phoneNumberSMS = []
+  const phoneNumberSMS = [];
   const emails = [];
 
   try {
@@ -128,11 +127,23 @@ router.post("/sendMessage", async (req, res) => {
     //If WhatsAPP Message
 
     if (message.whatsApp) {
-      res.status(200).json({
-        phoneNumbers: phoneNumbers,
-        message: message
-      })
- 
+      wbm
+        .start({ showBrowser: false, qrCodeData: true, session: false })
+        .then(async (qrCodeData) => {
+          console.log(qrCodeData);
+          res.send(qrCodeData);
+
+          await wbm.waitQRCode();
+          // Start waiting for QR code scanning in the background
+          const phones = phoneNumbers;
+          const messages = message.body;
+
+          await wbm.send(phones, messages);
+          await wbm.end();
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
 
     // if Email Message
@@ -166,7 +177,7 @@ router.post("/sendMessage", async (req, res) => {
         },
       };
 
-      let mail = mailgen.generate(response)
+      let mail = mailgen.generate(response);
 
       intersection.map((value) => emails.push(value.email));
 
@@ -178,26 +189,25 @@ router.post("/sendMessage", async (req, res) => {
           html: mail,
         };
 
-      transporter.sendMail(message).then(() => {
-        console.log(`Email sent to ${email}`);
-      }).catch((e) => {
-        console.error(`Failed to send email to ${email}:`, error);
-      })
-
+        transporter
+          .sendMail(message)
+          .then(() => {
+            console.log(`Email sent to ${email}`);
+          })
+          .catch((e) => {
+            console.error(`Failed to send email to ${email}:`, error);
+          });
+      }
+      res.status(201).json({ msg: "You should receive an email" });
     }
-    res.status(201).json({msg: "You should receive an email",});
 
-  }
+    // if SMS
 
-  // if SMS
+    if (message.sms) {
+      intersection.map((value) => phoneNumberSMS.push("91" + value.phone));
+      sendBulkMessages(message.body, phoneNumberSMS);
 
-    if(message.sms){
-      intersection.map((value) => phoneNumberSMS.push("91"+value.phone));
-      sendBulkMessages(message.body, phoneNumberSMS)
-
-res.status(201).json({msg: "You should receive your SMS",});
-
-
+      res.status(201).json({ msg: "You should receive your SMS" });
     } else {
       res
         .status(200)
@@ -215,7 +225,7 @@ res.status(201).json({msg: "You should receive your SMS",});
 
 router.post("/userUpdate", async (req, res) => {
   const { user } = req.body;
-  console.log("User:"+user)
+  console.log("User:" + user);
   try {
     const updatedUser = await User.findOneAndUpdate(
       { email: user.email },
@@ -225,7 +235,7 @@ router.post("/userUpdate", async (req, res) => {
     if (!updatedUser) {
       await User.create(user);
     }
-    console.log(updatedUser)
+    console.log(updatedUser);
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Error while Updating User:", error);
@@ -241,7 +251,9 @@ router.get("/fetchMessages", async (req, res) => {
     res.json(messages);
   } catch (error) {
     console.error("Error fetching messages:", error);
-    res.status(500).json({ error: "An error occurred while fetching messages" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching messages" });
   }
 });
 
