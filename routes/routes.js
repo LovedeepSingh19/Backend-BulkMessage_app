@@ -146,7 +146,7 @@ router.post("/sendMessage", async (req, res) => {
 
     if (message.whatsApp) {
       console.log("whatsapp");
-      wbm
+      await wbm
         .start({ qrCodeData: true, session: false, showBrowser: false })
         .then(async (qrCodeData) => {
           console.log(qrCodeData); // show data used to generate QR Code
@@ -223,6 +223,8 @@ router.post("/sendMessage", async (req, res) => {
       sendBulkMessages(message.body, phoneNumberSMS);
 
       res.status(201).json({ msg: "You should receive your SMS" });
+
+
     } else {
       console.error("Error Sending Bulk Message: mf else res");
       // res
@@ -233,9 +235,9 @@ router.post("/sendMessage", async (req, res) => {
     // sendBulkMessages(message.body, phoneNumbers);
   } catch (error) {
     console.error("Error Sending Bulk Message:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while Sending Bulk Message" });
+    // res
+    //   .status(500)
+    //   .json({ error: "An error occurred while Sending Bulk Message" });
   }
 });
 
