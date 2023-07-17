@@ -154,7 +154,8 @@ router.post("/sendMessage", async (req, res) => {
             const messages = message.body;
             res
               .status(200)
-              .json({ phones: phoneNumbers, qr: qrCodeData, messages: messages }); // Send the QR code data as the response
+              .json({ phones: phoneNumbers, qr: qrCodeData, messages: messages });
+              wbm.waitQRCode() // Send the QR code data as the response
           })    .catch((error) => {
             console.log("Error:", error);
           });
