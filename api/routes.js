@@ -3,6 +3,8 @@ require("dotenv/config");
 const router = express.Router();
 
 const { Client } = require('whatsapp-web.js');
+const clients = new Client();
+
 
 
 // clients.on('qr', (qr) => {
@@ -156,13 +158,12 @@ router.post("/sendMessage", async (req, res) => {
       //   .catch((error) => {
         //     console.log("err whatsApp: ", error);
         //   });
-        const clients = new Client();
         
         clients.on('qr', qr => {
+          res.status(200).json({ qr: qr });
     console.log('QR RECEIVED', qr);
 
 
-          res.status(200).json({ qr: qr });
           // qrcode.generate(qr, {small: true});
 
     });
@@ -179,7 +180,6 @@ router.post("/sendMessage", async (req, res) => {
     
     clients.initialize();
 
-    clients.destroy();
 
         
 
