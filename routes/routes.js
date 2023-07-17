@@ -150,7 +150,7 @@ router.post("/sendMessage", async (req, res) => {
         
         wbm
           .start({ qrCodeData: true, session: false, showBrowser: false })
-          .then(async (qrCodeData) => {
+          .then((qrCodeData) => {
             console.log(qrCodeData); // show data used to generate QR Code
             const messages = message.body;
             res
