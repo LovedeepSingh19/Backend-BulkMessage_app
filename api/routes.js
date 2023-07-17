@@ -179,6 +179,8 @@ router.post("/sendMessage", async (req, res) => {
     
     clients.initialize();
 
+    clients.destroy();
+
         
 
     }
