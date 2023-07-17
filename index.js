@@ -5,14 +5,6 @@ require("dotenv").config();
 
 const port = 8080 || process.env.PORT;
 
-// var corsOptions = {
-//   origin: 'https://poetic-cheesecake-f4aafb.netlify.app',
-//   optionsSuccessStatus: 200,
-//   methods: ["GET", "POST", "PUT", "DELETE"],
-//   credentials: true,
-// }
-
-
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");

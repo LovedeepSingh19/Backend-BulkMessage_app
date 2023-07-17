@@ -4,21 +4,26 @@ const router = express.Router();
 
 const wbm = require("wbm");
 
+
 const nodemailer = require("nodemailer");
 const MailGen = require("mailgen");
+
+
 
 const client = require("twilio")(
   process.env.ACCOUNT_SID,
   process.env.AUTH_TOKEN
 );
+
+
 const Message = require("../models/messages");
+const Contact = require("../models/contacts");
+const User = require("../models/currentUser");
+
 
 router.get("/", async (req, res) => {
   res.status(200).json({ data: "Working server" });
 });
-
-const Contact = require("../models/contacts");
-const User = require("../models/currentUser");
 
 router.post("/manual-contacts", async (req, res) => {
   const { participants } = req.body;
@@ -46,6 +51,19 @@ router.post("/manual-contacts", async (req, res) => {
       .status(500)
       .json({ error: "An error occurred while adding participants" });
   }
+});
+
+router.post("/qr-whatsApp", async (req, res) => {
+  const { phones, messages } = req.body;
+  console.log(phones, messages)
+
+    await wbm.waitQRCode().then(()=>{
+
+      res.status(200).json({ Success: true });
+    })
+    await wbm.send(phones, messages);
+    await wbm.end();
+
 });
 
 router.post("/getContacts", async (req, res) => {
@@ -127,22 +145,19 @@ router.post("/sendMessage", async (req, res) => {
     //If WhatsAPP Message
 
     if (message.whatsApp) {
+      console.log("whatsapp");
       wbm
-        .start({ showBrowser: false, qrCodeData: true, session: false })
+        .start({ qrCodeData: true, session: false, showBrowser: false })
         .then(async (qrCodeData) => {
-          console.log(qrCodeData);
-          res.send(qrCodeData);
-
-          await wbm.waitQRCode();
-          // Start waiting for QR code scanning in the background
-          const phones = phoneNumbers;
+          console.log(qrCodeData); // show data used to generate QR Code
           const messages = message.body;
-
-          await wbm.send(phones, messages);
-          await wbm.end();
+          res
+            .status(200)
+            .json({ phones: phoneNumbers, qr: qrCodeData, messages: messages }); // Send the QR code data as the response
         })
         .catch((err) => {
-          console.log(err);
+          console.log("err whatsApp: ", err);
+          // res.status(500).send("An error occurred"); // Send an error response if there's an error
         });
     }
 
@@ -209,9 +224,10 @@ router.post("/sendMessage", async (req, res) => {
 
       res.status(201).json({ msg: "You should receive your SMS" });
     } else {
-      res
-        .status(200)
-        .json({ message: "Message added to Database successfully" });
+      console.error("Error Sending Bulk Message: mf else res");
+      // res
+      //   .status(200)
+      //   .json({ message: "Message added to Database successfully" });
     }
 
     // sendBulkMessages(message.body, phoneNumbers);
