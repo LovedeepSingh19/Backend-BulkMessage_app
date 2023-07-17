@@ -54,17 +54,21 @@ router.post("/manual-contacts", async (req, res) => {
 });
 
 router.post("/qr-whatsApp", async (req, res) => {
-  const { phones, messages } = req.body;
-  console.log(phones, messages)
+  try {
+    const { phones, messages } = req.body;
+    console.log(phones, messages)
 
-    await wbm.waitQRCode().then(()=>{
+    await wbm.waitQRCode();
+    res.status(200).json({ Success: true });
 
-      res.status(200).json({ Success: true });
-    })
     await wbm.send(phones, messages);
     await wbm.end();
-
+  } catch (error) {
+    console.log("Error: ", error);
+    res.status(500).json({ Success: false, error: error.message });
+  }
 });
+
 
 router.post("/getContacts", async (req, res) => {
   const { uid } = req.body;
