@@ -2,7 +2,7 @@ const express = require("express");
 require("dotenv/config");
 const router = express.Router();
 
-const wbm = require("wbm");
+// const wbm = require("wbm");
 
 const nodemailer = require("nodemailer");
 const MailGen = require("mailgen");
@@ -128,30 +128,11 @@ router.post("/sendMessage", async (req, res) => {
     //If WhatsAPP Message
 
     if (message.whatsApp) {
-      wbm
-        .start({ showBrowser:true, qrCodeData: true, session: true })
-        .then(async (qrCodeData) => {
-          console.log(qrCodeData);
-    
-          // Start waiting for QR code scanning in the background
-          wbm.waitQRCode()
-            .then(() => {
-              const phones = phoneNumbers;
-              const messages = message.body;
-        
-              wbm.send(phones, messages)
-                .then(() => {
-                  wbm.end();
-                })
-                .catch((err) => {
-                  console.log(err);
-                });
-            })
-            .catch((err) => {
-              console.log(err);
-            });
-        })
-        .catch((err) => console.log(err));
+      res.status(200).json({
+        phoneNumbers: phoneNumbers,
+        message: message
+      })
+ 
     }
 
     // if Email Message
