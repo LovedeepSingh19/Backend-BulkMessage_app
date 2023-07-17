@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "babel src -d lib",
-    "start": "node --use_strict ./lib/index.js",
-    "watch": "nodemon --exec \"npm run build && node lib/index.js\" -e js --ignore lib/"
+    "build": "npm install",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-
   "keywords": [],
   "author": "",
   "license": "ISC",
