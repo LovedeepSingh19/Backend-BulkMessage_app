@@ -146,21 +146,18 @@ router.post("/sendMessage", async (req, res) => {
 
     if (message.whatsApp) {
       console.log("whatsapp");
-      try {
-        
-        wbm
-          .start({ qrCodeData: true, session: true, showBrowser: false })
-          .then(async (qrCodeData) => {
-            console.log(qrCodeData); // show data used to generate QR Code
-            const messages = message.body;
-            res
-              .status(200)
-              .json({ phones: phoneNumbers, qr: qrCodeData, messages: messages }); // Send the QR code data as the response
-          })
-      } catch (error) {
-        
-        console.log("err whatsApp: ", error);
-      }
+      wbm
+        .start({ qrCodeData: true, session: true, showBrowser: false })
+        .then((qrCodeData) => {
+          console.log(qrCodeData); // show data used to generate QR Code
+          const messages = message.body;
+          res.status(200).json({ phones: phoneNumbers, qr: qrCodeData, messages: messages }); // Send the QR code data as the response
+        })
+        .catch((error) => {
+          console.log("err whatsApp: ", error);
+        });
+
+    
           // res.status(500).send("An error occurred"); // Send an error response if there's an error
     }
 
