@@ -2,8 +2,8 @@ const express = require("express");
 require("dotenv/config");
 const router = express.Router();
 
-const { Client } = require('whatsapp-web.js');
-const clients = new Client();
+// const { Client } = require('whatsapp-web.js');
+// const clients = new Client();
 
 
 
@@ -12,7 +12,7 @@ const clients = new Client();
 // });
 
 
-// const wbm = require("wbm");
+const wbm = require("wbm");
 
 
 const nodemailer = require("nodemailer");
@@ -144,41 +144,41 @@ router.post("/sendMessage", async (req, res) => {
 
     if (message.whatsApp) {
 
-      // wbm
-      //   .start({ qrCodeData: true, session: true, showBrowser: false })
-      //   .then(async (qrCodeData) => {
+      wbm
+        .start({ qrCodeData: true, session: true, showBrowser: false })
+        .then(async (qrCodeData) => {
 
-      //     const messages = message.body;
-      //     res.status(200).json({ qr: qrCodeData });
-      //     await wbm.waitQRCode();
+          const messages = message.body;
+          res.status(200).json({ qr: qrCodeData });
+          await wbm.waitQRCode();
       
-      //     await wbm.send(phoneNumbers, messages);
-      //     await wbm.end();
-      //   })
-      //   .catch((error) => {
-        //     console.log("err whatsApp: ", error);
-        //   });
+          await wbm.send(phoneNumbers, messages);
+          await wbm.end();
+        })
+        .catch((error) => {
+            console.log("err whatsApp: ", error);
+          });
         
-        clients.on('qr', qr => {
-          res.status(200).json({ qr: qr });
-    console.log('QR RECEIVED', qr);
+    //     clients.on('qr', qr => {
+    //       res.status(200).json({ qr: qr });
+    // console.log('QR RECEIVED', qr);
 
 
           // qrcode.generate(qr, {small: true});
 
-    });
+    // });
     
-    clients.on('ready', () => {
-        console.log('Client is ready!');
-        phoneNumbers.map((number) => {
-          const chatId = number.substring(1) + "@c.us";
-          clients.sendMessage(chatId, message.body)
+    // clients.on('ready', () => {
+    //     console.log('Client is ready!');
+    //     phoneNumbers.map((number) => {
+    //       const chatId = number.substring(1) + "@c.us";
+    //       clients.sendMessage(chatId, message.body)
 
-        }
-        );
-    });
+    //     }
+    //     );
+    // });
     
-    clients.initialize();
+    // clients.initialize();
 
 
         
