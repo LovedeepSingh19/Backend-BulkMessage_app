@@ -4,6 +4,10 @@ const router = express.Router();
 
 var axios = require("axios");
 
+const chrome = require("chrome-aws-lambda");
+const puppeteer = require("puppeteer-core");
+
+
 // const { Client } = require('whatsapp-web.js');
 
 // const wbm = require("wbm");
@@ -132,6 +136,76 @@ router.post("/sendMessage", async (req, res) => {
 
     if (message.whatsApp) {
       res.status(200).json({number: phoneNumbers})
+
+// console.log("fuck")
+// const SELECTORS = {
+//   LOADING: "progress",
+//   INSIDE_CHAT: "document.getElementsByClassName('two')[0]",
+//   QRCODE_PAGE: "body > div > div > .landing-wrapper",
+//   QRCODE_DATA: "div[data-ref]",
+//   QRCODE_DATA_ATTR: "data-ref",
+//   SEND_BUTTON: 'div:nth-child(2) > button > span[data-icon="send"]'
+// };
+
+// console.log("fuck")
+//     const args = {
+//       args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
+//       defaultViewport: chrome.defaultViewport,
+//       executablePath: await chrome.executablePath,  
+//       headless: true,
+//       ignoreHTTPSErrors: true,
+//     };
+
+//     try {
+//         browser = await puppeteer.launch(args);
+//         page = await browser.newPage();
+//         page.setDefaultTimeout(30000);
+
+//         await page.goto(`https://web.whatsapp.com`);
+//         async function getQRCodeData() {
+//           await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 30000 });
+//           const qrcodeData = await page.evaluate((SELECTORS) => {
+//               let qrcodeDiv = document.querySelector(SELECTORS.QRCODE_DATA);
+//               return qrcodeDiv.getAttribute(SELECTORS.QRCODE_DATA_ATTR);
+//           }, SELECTORS);
+//           return await qrcodeData;
+//       }
+
+//       const qrcodeData = await getQRCodeData();
+// console.log("fuck")
+
+//       setTimeout(async () => {
+//       res.status(200).json({qr: qrcodeData})},8000)
+
+//       getQRCodeData().then(async (qrcodeData) => {
+        
+//         setTimeout(async () => {
+
+//           try {
+//           for (let num of number) {
+//             await page.goto(`https://web.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(message)}`);
+//             await page.waitForSelector(SELECTORS.LOADING, { hidden: true, timeout: 22000 });
+//             await page.waitForSelector(SELECTORS.SEND_BUTTON, { timeout: 22000 });
+//             await page.keyboard.press("Enter");
+//             await page.waitFor(1000);
+            
+//           }
+//         } catch (e) {
+//           console.error("Error occurred:", e);
+//         } finally {
+//           await browser.close();
+//         }
+        
+        
+//       }, 5000)
+        
+//     });
+
+//       }
+//             catch(e){
+//               console.log("BIG ERROR: ", e)
+//             }
+
      
 
       // wbm
