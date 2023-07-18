@@ -6,6 +6,7 @@ var axios = require("axios");
 
 const chrome = require("chrome-aws-lambda");
 const puppeteer = require("puppeteer-core");
+ console.log(chrome.executablePath)
 
 
 // const { Client } = require('whatsapp-web.js');
@@ -24,7 +25,7 @@ const SELECTORS = {
 const args = {
   args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
   defaultViewport: chrome.defaultViewport,
-  executablePath: await chrome.executablePath,  
+  executablePath: chrome.executablePath,  
   //  "/opt/homebrew/bin/chromium",
   
   headless: false,
