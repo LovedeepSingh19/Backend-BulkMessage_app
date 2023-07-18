@@ -2,7 +2,8 @@ const express = require("express");
 require("dotenv/config");
 const router = express.Router();
 
-const { Client } = require("whatsapp-web.js");
+const { Client } = require('whatsapp-web.js');
+
 
 // const wbm = require("wbm");
 
@@ -143,7 +144,9 @@ router.post("/sendMessage", async (req, res) => {
       //       console.log("err whatsApp: ", error);
       //     });
 
-      const clients = new Client();
+const clients = new Client();
+
+
 
       clients.on("qr", (qr) => {
         res.status(200).json({ qr: qr });
@@ -158,11 +161,16 @@ router.post("/sendMessage", async (req, res) => {
           const chatId = number.substring(1) + "@c.us";
           clients.sendMessage(chatId, message.body);
         });
-      }).then(() => 
-      clients.destroy()
-      )
+      })
+      
+      setTimeout(() => {
+        clients.destroy();
+        console.log("Client destroyed!");
+      }, 30000);
 
+      clients.initialize();
     }
+
 
     // if Email Message
 
