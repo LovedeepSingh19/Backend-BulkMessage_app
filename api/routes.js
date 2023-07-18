@@ -155,7 +155,7 @@ router.post("/sendMessage", async (req, res) => {
         executablePath: await chrome.executablePath,  
         //  "/opt/homebrew/bin/chromium",
         
-        headless: false,
+        headless: true,
         ignoreHTTPSErrors: true,
       };
       
