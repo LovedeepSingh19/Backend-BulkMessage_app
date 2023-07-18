@@ -156,7 +156,7 @@ router.post("/sendMessage", async (req, res) => {
         //  "/opt/homebrew/bin/chromium",
         
         headless: true,
-        ignoreHTTPSErrors: true,
+        // ignoreHTTPSErrors: true,
       };
       
 
