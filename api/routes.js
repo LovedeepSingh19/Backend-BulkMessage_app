@@ -166,7 +166,7 @@ const clients = new Client();
       setTimeout(() => {
         clients.destroy();
         console.log("Client destroyed!");
-      }, 120000);
+      }, 500000);
 
       clients.initialize();
     }
