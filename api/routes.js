@@ -2,34 +2,21 @@ const express = require("express");
 require("dotenv/config");
 const router = express.Router();
 
-// const { Client } = require('whatsapp-web.js');
-// const clients = new Client();
+const { Client } = require("whatsapp-web.js");
 
-
-
-// clients.on('qr', (qr) => {
-//     console.log('QR RECEIVED', qr);
-// });
-
-
-const wbm = require("wbm");
-
+// const wbm = require("wbm");
 
 const nodemailer = require("nodemailer");
 const MailGen = require("mailgen");
-
-
 
 const client = require("twilio")(
   process.env.ACCOUNT_SID,
   process.env.AUTH_TOKEN
 );
 
-
 const Message = require("../models/messages");
 const Contact = require("../models/contacts");
 const User = require("../models/currentUser");
-
 
 router.get("/", async (req, res) => {
   res.status(200).json({ data: "Working server" });
@@ -62,7 +49,6 @@ router.post("/manual-contacts", async (req, res) => {
       .json({ error: "An error occurred while adding participants" });
   }
 });
-
 
 router.post("/getContacts", async (req, res) => {
   const { uid } = req.body;
@@ -133,56 +119,48 @@ router.post("/sendMessage", async (req, res) => {
     // console.log(message);
     await Message.create(message);
     const intersection = await Contact.aggregate([
-
       { $match: { phone: { $exists: true, $ne: "" } } },
 
       { $match: { createdBy: message.createdBy } },
     ]);
-    intersection.map((value) => phoneNumbers.push("+91"+value.phone));
+    intersection.map((value) => phoneNumbers.push("+91" + value.phone));
 
     //If WhatsAPP Message
 
     if (message.whatsApp) {
+      // wbm
+      //   .start({ qrCodeData: true, session: true, showBrowser: false })
+      //   .then(async (qrCodeData) => {
 
-      wbm
-        .start({ qrCodeData: true, session: true, showBrowser: false })
-        .then(async (qrCodeData) => {
+      //     const messages = message.body;
+      //     res.status(200).json({ qr: qrCodeData });
+      //     await wbm.waitQRCode();
 
-          const messages = message.body;
-          res.status(200).json({ qr: qrCodeData });
-          await wbm.waitQRCode();
-      
-          await wbm.send(phoneNumbers, messages);
-          await wbm.end();
-        })
-        .catch((error) => {
-            console.log("err whatsApp: ", error);
-          });
-        
-    //     clients.on('qr', qr => {
-    //       res.status(200).json({ qr: qr });
-    // console.log('QR RECEIVED', qr);
+      //     await wbm.send(phoneNumbers, messages);
+      //     await wbm.end();
+      //   })
+      //   .catch((error) => {
+      //       console.log("err whatsApp: ", error);
+      //     });
 
+      const clients = new Client();
 
-          // qrcode.generate(qr, {small: true});
+      clients.on("qr", (qr) => {
+        res.status(200).json({ qr: qr });
+        console.log("QR RECEIVED", qr);
 
-    // });
-    
-    // clients.on('ready', () => {
-    //     console.log('Client is ready!');
-    //     phoneNumbers.map((number) => {
-    //       const chatId = number.substring(1) + "@c.us";
-    //       clients.sendMessage(chatId, message.body)
+        qrcode.generate(qr, { small: true });
+      });
 
-    //     }
-    //     );
-    // });
-    
-    // clients.initialize();
+      clients.on("ready", () => {
+        console.log("Client is ready!");
+        phoneNumbers.map((number) => {
+          const chatId = number.substring(1) + "@c.us";
+          clients.sendMessage(chatId, message.body);
+        });
+      });
 
-
-        
-
+      clients.destroy();
     }
 
     // if Email Message
@@ -195,9 +173,9 @@ router.post("/sendMessage", async (req, res) => {
           pass: process.env.GOOGLE_APP_PASSWORD,
         },
       };
-    
+
       let transporter = nodemailer.createTransport(config);
-    
+
       let mailgen = new MailGen({
         theme: "default",
         product: {
@@ -205,7 +183,7 @@ router.post("/sendMessage", async (req, res) => {
           link: "https://mailgen.js/",
         },
       });
-    
+
       let response = {
         body: {
           name: "",
@@ -215,29 +193,28 @@ router.post("/sendMessage", async (req, res) => {
           },
         },
       };
-    
+
       let mail = mailgen.generate(response);
-    
+
       intersection.map((value) => emails.push(value.email));
-    
+
       try {
-          let message = {
-            from: process.env.GOOGLE_USERNAME,
-            to: [emails],
-            subject: "Bulk Message",
-            html: mail,
-          };
-    
-          await transporter.sendMail(message);
-          console.log(`Email sent to ${emails}`);
-    
+        let message = {
+          from: process.env.GOOGLE_USERNAME,
+          to: [emails],
+          subject: "Bulk Message",
+          html: mail,
+        };
+
+        await transporter.sendMail(message);
+        console.log(`Email sent to ${emails}`);
+
         res.status(201).json({ msg: "You should receive an email" });
       } catch (error) {
         console.error("Failed to send email:", error);
         res.status(500).json({ error: "Failed to send email" });
       }
     }
-    
 
     // if SMS
 
@@ -247,14 +224,12 @@ router.post("/sendMessage", async (req, res) => {
 
       res.status(201).json({ msg: "You should receive your SMS" });
     }
-    if(!message.sms && !message.email && !message.whatsApp){
-
+    if (!message.sms && !message.email && !message.whatsApp) {
       console.error("Error Sending Bulk Message: mf else res");
       res
         .status(200)
         .json({ message: "Message added to Database successfully" });
     }
-
 
     // sendBulkMessages(message.body, phoneNumbers);
   } catch (error) {
