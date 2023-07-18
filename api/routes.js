@@ -148,11 +148,12 @@ router.post("/sendMessage", async (req, res) => {
 
     if (message.whatsApp) {
       // res.status(200).json({number: phoneNumbers})
+      const location = await chrome.executablePath
 
       const args = {
         args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
         defaultViewport: chrome.defaultViewport,
-        executablePath: await chrome.executablePath,  
+        executablePath: `${location}`,  
         //  "/opt/homebrew/bin/chromium",
         
         headless: true,
