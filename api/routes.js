@@ -148,11 +148,18 @@ router.post("/sendMessage", async (req, res) => {
       // res.status(200).json({number: phoneNumbers})
 
       const args = {
-        args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
+        args: [
+          "_-disable-setuid-sandbox",
+        "--no-sandbox",
+        "--single-process",
+        "--no-zygote",
+      ],
+        executablePath: process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
+
         //  "/opt/homebrew/bin/chromium",
         
         headless: true,
-        ignoreHTTPSErrors: true,
+        // ignoreHTTPSErrors: true,
       };
       
 
