@@ -2,8 +2,9 @@ const express = require("express");
 require("dotenv/config");
 const router = express.Router();
 
-const { Client } = require('whatsapp-web.js');
+var axios = require("axios");
 
+// const { Client } = require('whatsapp-web.js');
 
 // const wbm = require("wbm");
 
@@ -110,6 +111,7 @@ function sendBulkMessages(messageBody, numberList) {
     .catch((error) => console.log(error));
 }
 
+
 router.post("/sendMessage", async (req, res) => {
   const { message } = req.body;
   const phoneNumbers = [];
@@ -124,11 +126,14 @@ router.post("/sendMessage", async (req, res) => {
 
       { $match: { createdBy: message.createdBy } },
     ]);
-    intersection.map((value) => phoneNumbers.push("+91" + value.phone));
+    intersection.map((value) => phoneNumbers.push("+91 "+value.phone));
 
     //If WhatsAPP Message
 
     if (message.whatsApp) {
+      res.status(200).json({number: phoneNumbers})
+     
+
       // wbm
       //   .start({ qrCodeData: true, session: true, showBrowser: false })
       //   .then(async (qrCodeData) => {
@@ -144,33 +149,30 @@ router.post("/sendMessage", async (req, res) => {
       //       console.log("err whatsApp: ", error);
       //     });
 
-const clients = new Client();
+      // const clients = new Client();
 
+      //       clients.on("qr", (qr) => {
+      //         res.status(200).json({ qr: qr });
+      //         console.log("QR RECEIVED", qr);
 
+      //         qrcode.generate(qr, { small: true });
+      //       });
 
-      clients.on("qr", (qr) => {
-        res.status(200).json({ qr: qr });
-        console.log("QR RECEIVED", qr);
+      //       clients.on("ready", () => {
+      //         console.log("Client is ready!");
+      //         phoneNumbers.map((number) => {
+      //           const chatId = number.substring(1) + "@c.us";
+      //           clients.sendMessage(chatId, message.body);
+      //         });
+      //       })
 
-        qrcode.generate(qr, { small: true });
-      });
+      //       setTimeout(() => {
+      //         clients.destroy();
+      //         console.log("Client destroyed!");
+      //       }, 500000);
 
-      clients.on("ready", () => {
-        console.log("Client is ready!");
-        phoneNumbers.map((number) => {
-          const chatId = number.substring(1) + "@c.us";
-          clients.sendMessage(chatId, message.body);
-        });
-      })
-      
-      setTimeout(() => {
-        clients.destroy();
-        console.log("Client destroyed!");
-      }, 500000);
-
-      clients.initialize();
+      //       clients.initialize();
     }
-
 
     // if Email Message
 
