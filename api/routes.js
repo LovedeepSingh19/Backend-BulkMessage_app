@@ -158,9 +158,10 @@ router.post("/sendMessage", async (req, res) => {
           const chatId = number.substring(1) + "@c.us";
           clients.sendMessage(chatId, message.body);
         });
-      });
+      }).then(() => 
+      clients.destroy()
+      )
 
-      clients.destroy();
     }
 
     // if Email Message
