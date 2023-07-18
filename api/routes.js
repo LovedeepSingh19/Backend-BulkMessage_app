@@ -3,9 +3,7 @@ require("dotenv/config");
 const router = express.Router();
 
 var axios = require("axios");
-
-const chrome = require("chrome-aws-lambda");
-const puppeteer = require("puppeteer-core");
+const puppeteer = require("puppeteer");
 
 
 // const { Client } = require('whatsapp-web.js');
@@ -151,12 +149,10 @@ router.post("/sendMessage", async (req, res) => {
 
       const args = {
         args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
-        defaultViewport: chrome.defaultViewport,
-        executablePath: await chrome.executablePath,  
         //  "/opt/homebrew/bin/chromium",
         
         headless: true,
-        // ignoreHTTPSErrors: true,
+        ignoreHTTPSErrors: true,
       };
       
 
