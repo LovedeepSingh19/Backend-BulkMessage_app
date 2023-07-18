@@ -134,9 +134,6 @@ router.post("/sendMessage", async (req, res) => {
   const phoneNumberSMS = [];
   const emails = [];
 
-  const vars = await chrome.executablePath
- console.log(vars)
-
   try {
     // console.log(message);
     await Message.create(message);
