@@ -1,1 +1,1 @@
-Hosted Link ==-->>  https://backend-bulk-message.onrender.com/
+Hosted Link ==-->>  https://backend-bulk-message-app.vercel.app
