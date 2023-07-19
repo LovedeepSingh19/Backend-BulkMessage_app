@@ -170,11 +170,11 @@ console.log("fuck")
     try {
         browser = await puppeteer.launch(args);
         page = await browser.newPage();
-        page.setDefaultTimeout(7000);
+        page.setDefaultTimeout(60000);
 
         await page.goto(`https://web.whatsapp.com`);
         async function getQRCodeData() {
-          await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 30000 });
+          await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 60000 });
           const qrcodeData = await page.evaluate((SELECTORS) => {
               let qrcodeDiv = document.querySelector(SELECTORS.QRCODE_DATA);
               return qrcodeDiv.getAttribute(SELECTORS.QRCODE_DATA_ATTR);
