@@ -205,7 +205,7 @@ console.log("start")
  * return the data used to create the QR Code
  */
 async function getQRCodeData() {
-    await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 5000 });
+    await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 10000 });
     const qrcodeData = await page.evaluate((SELECTORS) => {
         let qrcodeDiv = document.querySelector(SELECTORS.QRCODE_DATA);
         return qrcodeDiv.getAttribute(SELECTORS.QRCODE_DATA_ATTR);
@@ -246,7 +246,7 @@ async function sendTo(phoneOrContact, message) {
         process.stdout.write("Sending Message...\r");
         await page.goto(`https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`);
         await page.waitForSelector(SELECTORS.LOADING, { hidden: true, timeout: 10000 });
-        await page.waitForSelector(SELECTORS.SEND_BUTTON, { timeout: 3000 });
+        await page.waitForSelector(SELECTORS.SEND_BUTTON, { timeout: 8000 });
         await page.keyboard.press("Enter");
         await page.waitFor(1000);
         process.stdout.clearLine();
