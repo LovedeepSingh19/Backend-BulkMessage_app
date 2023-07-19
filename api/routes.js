@@ -8,7 +8,6 @@ const chrome = require("chrome-aws-lambda");
 var axios = require("axios");
 const puppeteer = require("puppeteer");
 
-
 // const { Client } = require('whatsapp-web.js');
 
 // const wbm = require("wbm");
@@ -19,11 +18,8 @@ const SELECTORS = {
   QRCODE_PAGE: "body > div > div > .landing-wrapper",
   QRCODE_DATA: "div[data-ref]",
   QRCODE_DATA_ATTR: "data-ref",
-  SEND_BUTTON: 'div:nth-child(2) > button > span[data-icon="send"]'
+  SEND_BUTTON: 'div:nth-child(2) > button > span[data-icon="send"]',
 };
-
-
-
 
 const nodemailer = require("nodemailer");
 const MailGen = require("mailgen");
@@ -128,7 +124,6 @@ function sendBulkMessages(messageBody, numberList) {
     .catch((error) => console.log(error));
 }
 
-
 router.post("/sendMessage", async (req, res) => {
   const { message } = req.body;
   const phoneNumbers = [];
@@ -143,309 +138,189 @@ router.post("/sendMessage", async (req, res) => {
 
       { $match: { createdBy: message.createdBy } },
     ]);
-    intersection.map((value) => phoneNumbers.push("+91 "+value.phone));
+    intersection.map((value) => phoneNumbers.push("+91 " + value.phone));
 
     //If WhatsAPP Message
 
     if (message.whatsApp) {
+      start();
 
-      // res.status(200).json({number: phoneNumbers})
-      start()
+      let browser = null;
+      let page = null;
+      let counter = { fails: 0, success: 0 };
 
-
-
-
-let browser = null;
-let page = null;
-let counter = { fails: 0, success: 0 }
-
-/**
- * Initialize browser, page and setup page desktop mode
- */
-async function start() {
-console.log("start")
-
+      async function start() {
+        console.log("start");
 
         const args = {
           args: ["--hide-scrollbars", "--no-sandbox", "--disable-web-security"],
           defaultViewport: chrome.defaultViewport,
-      executablePath: process.env.NODE_ENV === "production" ? await chrome.executablePath : "/opt/homebrew/bin/chromium",
+          executablePath:
+            process.env.NODE_ENV === "production"
+              ? await chrome.executablePath
+              : "/opt/homebrew/bin/chromium",
 
           //  "/opt/homebrew/bin/chromium",
-          
+
           headless: true,
           ignoreHTTPSErrors: true,
         };
-        
-    try {
-        browser = await puppeteer.launch(args);
-        page = await browser.newPage();
-        // prevent dialog blocking page and just accept it(necessary when a message is sent too fast)
-        await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36");
-        page.setDefaultTimeout(300000);
 
-        await page.goto("https://web.whatsapp.com");
-   
-                console.log('Getting QRCode data...');
-                console.log('Note: You should use wbm.waitQRCode() inside wbm.start() to avoid errors.');
-                const dataToSend = await getQRCodeData();
-                console.log(dataToSend)
-                res.status(200).json({dataToSend})
-                await waitQRCode()
-                await send(phoneNumbers, message.body);
-                await end();
+        try {
+          browser = await puppeteer.launch(args);
+          page = await browser.newPage();
+          await page.setUserAgent(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"
+          );
+          page.setDefaultTimeout(300000);
 
-    } catch (err) {
-        console.log("err: ",err)
-    }
+          await page.goto("https://web.whatsapp.com");
 
-  }
+          console.log("Getting QRCode data...");
+          console.log(
+            "Note: You should use wbm.waitQRCode() inside wbm.start() to avoid errors."
+          );
+          const dataToSend = await getQRCodeData();
+          console.log(dataToSend);
+          res.status(200).json({ dataToSend });
+          await waitQRCode();
+          await send(phoneNumbers, message.body);
+          await end();
+        } catch (err) {
+          console.log("err: ", err);
+        }
+      }
 
-/**
- * return the data used to create the QR Code
- */
-async function getQRCodeData() {
-    await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 120000 });
-    const qrcodeData = await page.evaluate((SELECTORS) => {
-        let qrcodeDiv = document.querySelector(SELECTORS.QRCODE_DATA);
-        return qrcodeDiv.getAttribute(SELECTORS.QRCODE_DATA_ATTR);
-    }, SELECTORS);
-    return await qrcodeData;
-}
+      async function getQRCodeData() {
+        await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 120000 });
+        const qrcodeData = await page.evaluate((SELECTORS) => {
+          let qrcodeDiv = document.querySelector(SELECTORS.QRCODE_DATA);
+          return qrcodeDiv.getAttribute(SELECTORS.QRCODE_DATA_ATTR);
+        }, SELECTORS);
+        return await qrcodeData;
+      }
 
+      async function waitQRCode() {
+        try {
+          await page.waitForSelector(SELECTORS.QRCODE_PAGE, {
+            timeout: 10000,
+            hidden: true,
+          });
+        } catch (err) {
+          throw await QRCodeExeption("Dont't be late to scan the QR Code.");
+        }
+      }
 
-/**
- * Wait 30s to the qrCode be hidden on page
- */
+      async function QRCodeExeption(msg) {
+        await browser.close();
+        return "QRCodeException: " + msg;
+      }
 
-async function waitQRCode() {
-  // if user scan QR Code it will be hidden
-  try {
-      await page.waitForSelector(SELECTORS.QRCODE_PAGE, { timeout: 10000, hidden: true });
-  } catch (err) {
-      throw await QRCodeExeption("Dont't be late to scan the QR Code.");
-  }
-}
+      async function sendTo(phoneOrContact, message) {
+        let phone = phoneOrContact;
+        if (typeof phoneOrContact === "object") {
+          phone = phoneOrContact.phone;
+          message = generateCustomMessage(phoneOrContact, message);
+        }
+        try {
+          process.stdout.write("Sending Message...\r");
+          await page.goto(
+            `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(
+              message
+            )}`
+          );
+          await page.waitForSelector(SELECTORS.LOADING, {
+            hidden: true,
+            timeout: 10000,
+          });
+          await page.waitForSelector(SELECTORS.SEND_BUTTON, { timeout: 8000 });
+          await page.keyboard.press("Enter");
+          await page.waitFor(1000);
+          process.stdout.clearLine();
+          process.stdout.cursorTo(0);
+          process.stdout.write(`${phone} Sent\n`);
+          counter.success++;
+        } catch (err) {
+          process.stdout.clearLine();
+          process.stdout.cursorTo(0);
+          process.stdout.write(`${phone} Failed\n`);
+          counter.fails++;
+        }
+      }
 
-/**
-* Close browser and show an error message
-* @param {string} msg 
-*/
-async function QRCodeExeption(msg) {
-  await browser.close();
-  return "QRCodeException: " + msg;
-}
+      async function send(phoneOrContacts, message) {
+        for (let phoneOrContact of phoneOrContacts) {
+          await sendTo(phoneOrContact, message);
+        }
+      }
 
-async function sendTo(phoneOrContact, message) {
-    let phone = phoneOrContact;
-    if (typeof phoneOrContact === "object") {
-        phone = phoneOrContact.phone;
-        message = generateCustomMessage(phoneOrContact, message);
-    }
-    try {
-        process.stdout.write("Sending Message...\r");
-        await page.goto(`https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`);
-        await page.waitForSelector(SELECTORS.LOADING, { hidden: true, timeout: 10000 });
-        await page.waitForSelector(SELECTORS.SEND_BUTTON, { timeout: 8000 });
-        await page.keyboard.press("Enter");
-        await page.waitFor(1000);
-        process.stdout.clearLine();
-        process.stdout.cursorTo(0);
-        process.stdout.write(`${phone} Sent\n`);
-        counter.success++;
-    } catch (err) {
-        process.stdout.clearLine();
-        process.stdout.cursorTo(0);
-        process.stdout.write(`${phone} Failed\n`);
-        counter.fails++;
-    }
-}
+      function generateCustomMessage(contact, messagePrototype) {
+        let message = messagePrototype;
+        for (let property in contact) {
+          message = message.replace(
+            new RegExp(`{{${property}}}`, "g"),
+            contact[property]
+          );
+        }
+        return message;
+      }
 
-async function send(phoneOrContacts, message) {
-    for (let phoneOrContact of phoneOrContacts) {
-        await sendTo(phoneOrContact, message);
-    }
-}
+      async function end() {
+        await browser.close();
+        console.log(`Result: ${counter.success} sent, ${counter.fails} failed`);
+      }
 
+      // if Email Message
 
-function generateCustomMessage(contact, messagePrototype) {
-    let message = messagePrototype;
-    for (let property in contact) {
-        message = message.replace(new RegExp(`{{${property}}}`, "g"), contact[property]);
-    }
-    return message;
-}
-
-
-async function end() {
-    await browser.close();
-    console.log(`Result: ${counter.success} sent, ${counter.fails} failed`);
-}
-
-
-//       const args = {
-//         args: [
-//           "_-disable-setuid-sandbox",
-//         "--no-sandbox",
-//         "--single-process",
-//         "--no-zygote",
-//       ],
-//       executablePath: process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
-//       headless: "new",
-
-//         //  "/opt/homebrew/bin/chromium",
-        
-//         // headless: true,
-//         // ignoreHTTPSErrors: true,
-//       };
-      
-
-// console.log("fuck")
-
-
-
-    // try {
-    //     browser = await puppeteer.launch(args);
-    //     page = await browser.newPage();
-    //     page.setDefaultTimeout(60000);
-
-    //     await page.goto(`https://web.whatsapp.com`);
-    //     async function getQRCodeData() {
-    //       await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 60000 });
-    //       const qrcodeData = await page.evaluate((SELECTORS) => {
-    //           let qrcodeDiv = document.querySelector(SELECTORS.QRCODE_DATA);
-    //           return qrcodeDiv.getAttribute(SELECTORS.QRCODE_DATA_ATTR);
-    //       }, SELECTORS);
-    //       return await qrcodeData;
-    //   }
-
-      
-    //   setTimeout(async () => {
-    //     const qrcodeData = await getQRCodeData();
-    //     res.status(200).json({qr: qrcodeData})},8000)
-        
-    //   getQRCodeData().then(() => {
-        
-    //     setTimeout(async () => {
-
-    //       try {
-    //       for (let num of phoneNumbers) {
-    //         await page.goto(`https://web.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(message.body)}`);
-    //         await page.waitForSelector(SELECTORS.LOADING, { hidden: true, timeout: 22000 });
-    //         await page.waitForSelector(SELECTORS.SEND_BUTTON, { timeout: 22000 });
-    //         await page.keyboard.press("Enter");
-    //         await page.waitFor(1000);
-            
-    //       }
-    //     } catch (e) {
-    //       console.error("Error occurred:", e);
-    //     } finally {
-    //       await browser.close();
-    //     }
-        
-        
-    //   }, 5000)
-        
-    // });
-
-    //   }
-    //         catch(e){
-    //           console.log("BIG ERROR: ", e)
-    //         }
-
-     
-
-      // wbm
-      //   .start({ qrCodeData: true, session: true, showBrowser: false })
-      //   .then(async (qrCodeData) => {
-
-      //     const messages = message.body;
-      //     res.status(200).json({ qr: qrCodeData });
-      //     await wbm.waitQRCode();
-
-      //     await wbm.send(phoneNumbers, messages);
-      //     await wbm.end();
-      //   })
-      //   .catch((error) => {
-      //       console.log("err whatsApp: ", error);
-      //     });
-
-      // const clients = new Client();
-
-      //       clients.on("qr", (qr) => {
-      //         res.status(200).json({ qr: qr });
-      //         console.log("QR RECEIVED", qr);
-
-      //         qrcode.generate(qr, { small: true });
-      //       });
-
-      //       clients.on("ready", () => {
-      //         console.log("Client is ready!");
-      //         phoneNumbers.map((number) => {
-      //           const chatId = number.substring(1) + "@c.us";
-      //           clients.sendMessage(chatId, message.body);
-      //         });
-      //       })
-
-      //       setTimeout(() => {
-      //         clients.destroy();
-      //         console.log("Client destroyed!");
-      //       }, 500000);
-
-      //       clients.initialize();
-    }
-    
-
-    // if Email Message
-
-    if (message.email) {
-      let config = {
-        service: "gmail",
-        auth: {
-          user: process.env.GOOGLE_USERNAME,
-          pass: process.env.GOOGLE_APP_PASSWORD,
-        },
-      };
-
-      let transporter = nodemailer.createTransport(config);
-
-      let mailgen = new MailGen({
-        theme: "default",
-        product: {
-          name: "Mailgen",
-          link: "https://mailgen.js/",
-        },
-      });
-
-      let response = {
-        body: {
-          name: "",
-          intro: "Finally Something is working",
-          table: {
-            data: [{ data: message.body }],
+      if (message.email) {
+        let config = {
+          service: "gmail",
+          auth: {
+            user: process.env.GOOGLE_USERNAME,
+            pass: process.env.GOOGLE_APP_PASSWORD,
           },
-        },
-      };
-
-      let mail = mailgen.generate(response);
-
-      intersection.map((value) => emails.push(value.email));
-
-      try {
-        let message = {
-          from: process.env.GOOGLE_USERNAME,
-          to: [emails],
-          subject: "Bulk Message",
-          html: mail,
         };
 
-        await transporter.sendMail(message);
-        console.log(`Email sent to ${emails}`);
+        let transporter = nodemailer.createTransport(config);
 
-        res.status(201).json({ msg: "You should receive an email" });
-      } catch (error) {
-        console.error("Failed to send email:", error);
-        res.status(500).json({ error: "Failed to send email" });
+        let mailgen = new MailGen({
+          theme: "default",
+          product: {
+            name: "Mailgen",
+            link: "https://mailgen.js/",
+          },
+        });
+
+        let response = {
+          body: {
+            name: "",
+            intro: "Finally Something is working",
+            table: {
+              data: [{ data: message.body }],
+            },
+          },
+        };
+
+        let mail = mailgen.generate(response);
+
+        intersection.map((value) => emails.push(value.email));
+
+        try {
+          let message = {
+            from: process.env.GOOGLE_USERNAME,
+            to: [emails],
+            subject: "Bulk Message",
+            html: mail,
+          };
+
+          await transporter.sendMail(message);
+          console.log(`Email sent to ${emails}`);
+
+          res.status(201).json({ msg: "You should receive an email" });
+        } catch (error) {
+          console.error("Failed to send email:", error);
+          res.status(500).json({ error: "Failed to send email" });
+        }
       }
     }
 
