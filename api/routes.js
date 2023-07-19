@@ -2,11 +2,11 @@ const express = require("express");
 require("dotenv/config");
 const router = express.Router();
 
-const puppeteer = require("puppeteer-core");
+// const puppeteer = require("puppeteer-core");
 const chrome = require("chrome-aws-lambda");
 
 var axios = require("axios");
-// const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer");
 
 
 // const { Client } = require('whatsapp-web.js');
@@ -167,7 +167,7 @@ console.log("start")
 
 
         const args = {
-          args: [...chrome.args, "--hide-scrollbars", "--no-sandbox", "--disable-web-security"],
+          args: ["--hide-scrollbars", "--no-sandbox", "--disable-web-security"],
           defaultViewport: chrome.defaultViewport,
       executablePath: process.env.NODE_ENV === "production" ? await chrome.executablePath : "/opt/homebrew/bin/chromium",
 
