@@ -2,8 +2,8 @@ const express = require("express");
 require("dotenv/config");
 const router = express.Router();
 
-// const puppeteer = require("puppeteer-core");
-const puppeteer = require("puppeteer-firefox");
+const puppeteer = require("puppeteer-core");
+const chrome = require("chrome-aws-lambda");
 
 var axios = require("axios");
 // const puppeteer = require("puppeteer");
@@ -167,10 +167,9 @@ console.log("start")
 
 
         const args = {
-          args: [ "--hide-scrollbars", "--no-sandbox", "--disable-web-security"],
-          // defaultViewport: chrome.defaultViewport,
-      // executablePath: process.env.NODE_ENV === "production" ? await chrome.executablePath : "/opt/homebrew/bin/chromium",
-
+          args: [...chrome.args, "--hide-scrollbars", "--no-sandbox", "--disable-web-security"],
+          defaultViewport: chrome.defaultViewport,
+      executablePath: process.env.NODE_ENV === "production" ? await chrome.executablePath : "/opt/homebrew/bin/chromium",
 
           //  "/opt/homebrew/bin/chromium",
           
@@ -183,9 +182,9 @@ console.log("start")
         page = await browser.newPage();
         // prevent dialog blocking page and just accept it(necessary when a message is sent too fast)
         await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36");
-        page.setDefaultTimeout(60000);
+        page.setDefaultTimeout(30000);
 
-        await page.goto("https://web.whatsapp.com", {timeout: 0});
+        await page.goto("https://web.whatsapp.com");
    
                 console.log('Getting QRCode data...');
                 console.log('Note: You should use wbm.waitQRCode() inside wbm.start() to avoid errors.');
