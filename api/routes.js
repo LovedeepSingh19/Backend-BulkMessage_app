@@ -2,8 +2,11 @@ const express = require("express");
 require("dotenv/config");
 const router = express.Router();
 
+const puppeteer = require("puppeteer-core");
+const chrome = require("chrome-aws-lambda");
+
 var axios = require("axios");
-const puppeteer = require("puppeteer");
+// const puppeteer = require("puppeteer");
 
 
 // const { Client } = require('whatsapp-web.js');
@@ -145,77 +148,210 @@ router.post("/sendMessage", async (req, res) => {
     //If WhatsAPP Message
 
     if (message.whatsApp) {
+
       // res.status(200).json({number: phoneNumbers})
+      start()
 
-      const args = {
-        args: [
-          "_-disable-setuid-sandbox",
-        "--no-sandbox",
-        "--single-process",
-        "--no-zygote",
-      ],
-      executablePath: process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
-      headless: "new",
 
-        //  "/opt/homebrew/bin/chromium",
+
+
+let browser = null;
+let page = null;
+let counter = { fails: 0, success: 0 }
+
+/**
+ * Initialize browser, page and setup page desktop mode
+ */
+async function start() {
+console.log("start")
+
+
+        const args = {
+          args: [...chrome.args, "--hide-scrollbars", "--no-sandbox", "--disable-web-security"],
+          defaultViewport: chrome.defaultViewport,
+      executablePath: process.env.NODE_ENV === "production" ? await chrome.executablePath : "/opt/homebrew/bin/chromium",
+
+          //  "/opt/homebrew/bin/chromium",
+          
+          headless: true,
+          ignoreHTTPSErrors: true,
+        };
         
-        // headless: true,
-        // ignoreHTTPSErrors: true,
-      };
-      
-
-console.log("fuck")
-
-
-
     try {
         browser = await puppeteer.launch(args);
         page = await browser.newPage();
-        page.setDefaultTimeout(60000);
+        // prevent dialog blocking page and just accept it(necessary when a message is sent too fast)
+        await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36");
+        page.setDefaultTimeout(30000);
 
-        await page.goto(`https://web.whatsapp.com`);
-        async function getQRCodeData() {
-          await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 60000 });
-          const qrcodeData = await page.evaluate((SELECTORS) => {
-              let qrcodeDiv = document.querySelector(SELECTORS.QRCODE_DATA);
-              return qrcodeDiv.getAttribute(SELECTORS.QRCODE_DATA_ATTR);
-          }, SELECTORS);
-          return await qrcodeData;
-      }
+        await page.goto("https://web.whatsapp.com");
+   
+                console.log('Getting QRCode data...');
+                console.log('Note: You should use wbm.waitQRCode() inside wbm.start() to avoid errors.');
+                const dataToSend = await getQRCodeData();
+                console.log(dataToSend)
+                res.status(200).json({dataToSend})
+                await waitQRCode()
+                await send(phoneNumbers, message.body);
+                await end();
+
+    } catch (err) {
+        console.log("err: ",err)
+    }
+
+  }
+
+/**
+ * return the data used to create the QR Code
+ */
+async function getQRCodeData() {
+    await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 30000 });
+    const qrcodeData = await page.evaluate((SELECTORS) => {
+        let qrcodeDiv = document.querySelector(SELECTORS.QRCODE_DATA);
+        return qrcodeDiv.getAttribute(SELECTORS.QRCODE_DATA_ATTR);
+    }, SELECTORS);
+    return await qrcodeData;
+}
+
+
+/**
+ * Wait 30s to the qrCode be hidden on page
+ */
+
+async function waitQRCode() {
+  // if user scan QR Code it will be hidden
+  try {
+      await page.waitForSelector(SELECTORS.QRCODE_PAGE, { timeout: 10000, hidden: true });
+  } catch (err) {
+      throw await QRCodeExeption("Dont't be late to scan the QR Code.");
+  }
+}
+
+/**
+* Close browser and show an error message
+* @param {string} msg 
+*/
+async function QRCodeExeption(msg) {
+  await browser.close();
+  return "QRCodeException: " + msg;
+}
+
+async function sendTo(phoneOrContact, message) {
+    let phone = phoneOrContact;
+    if (typeof phoneOrContact === "object") {
+        phone = phoneOrContact.phone;
+        message = generateCustomMessage(phoneOrContact, message);
+    }
+    try {
+        process.stdout.write("Sending Message...\r");
+        await page.goto(`https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`);
+        await page.waitForSelector(SELECTORS.LOADING, { hidden: true, timeout: 10000 });
+        await page.waitForSelector(SELECTORS.SEND_BUTTON, { timeout: 3000 });
+        await page.keyboard.press("Enter");
+        await page.waitFor(1000);
+        process.stdout.clearLine();
+        process.stdout.cursorTo(0);
+        process.stdout.write(`${phone} Sent\n`);
+        counter.success++;
+    } catch (err) {
+        process.stdout.clearLine();
+        process.stdout.cursorTo(0);
+        process.stdout.write(`${phone} Failed\n`);
+        counter.fails++;
+    }
+}
+
+async function send(phoneOrContacts, message) {
+    for (let phoneOrContact of phoneOrContacts) {
+        await sendTo(phoneOrContact, message);
+    }
+}
+
+
+function generateCustomMessage(contact, messagePrototype) {
+    let message = messagePrototype;
+    for (let property in contact) {
+        message = message.replace(new RegExp(`{{${property}}}`, "g"), contact[property]);
+    }
+    return message;
+}
+
+
+async function end() {
+    await browser.close();
+    console.log(`Result: ${counter.success} sent, ${counter.fails} failed`);
+}
+
+
+//       const args = {
+//         args: [
+//           "_-disable-setuid-sandbox",
+//         "--no-sandbox",
+//         "--single-process",
+//         "--no-zygote",
+//       ],
+//       executablePath: process.env.NODE_ENV === "production" ? process.env.PUPPETEER_EXECUTABLE_PATH : puppeteer.executablePath(),
+//       headless: "new",
+
+//         //  "/opt/homebrew/bin/chromium",
+        
+//         // headless: true,
+//         // ignoreHTTPSErrors: true,
+//       };
+      
+
+// console.log("fuck")
+
+
+
+    // try {
+    //     browser = await puppeteer.launch(args);
+    //     page = await browser.newPage();
+    //     page.setDefaultTimeout(60000);
+
+    //     await page.goto(`https://web.whatsapp.com`);
+    //     async function getQRCodeData() {
+    //       await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 60000 });
+    //       const qrcodeData = await page.evaluate((SELECTORS) => {
+    //           let qrcodeDiv = document.querySelector(SELECTORS.QRCODE_DATA);
+    //           return qrcodeDiv.getAttribute(SELECTORS.QRCODE_DATA_ATTR);
+    //       }, SELECTORS);
+    //       return await qrcodeData;
+    //   }
 
       
-      setTimeout(async () => {
-        const qrcodeData = await getQRCodeData();
-        res.status(200).json({qr: qrcodeData})},8000)
+    //   setTimeout(async () => {
+    //     const qrcodeData = await getQRCodeData();
+    //     res.status(200).json({qr: qrcodeData})},8000)
         
-      getQRCodeData().then(() => {
+    //   getQRCodeData().then(() => {
         
-        setTimeout(async () => {
+    //     setTimeout(async () => {
 
-          try {
-          for (let num of phoneNumbers) {
-            await page.goto(`https://web.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(message.body)}`);
-            await page.waitForSelector(SELECTORS.LOADING, { hidden: true, timeout: 22000 });
-            await page.waitForSelector(SELECTORS.SEND_BUTTON, { timeout: 22000 });
-            await page.keyboard.press("Enter");
-            await page.waitFor(1000);
+    //       try {
+    //       for (let num of phoneNumbers) {
+    //         await page.goto(`https://web.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(message.body)}`);
+    //         await page.waitForSelector(SELECTORS.LOADING, { hidden: true, timeout: 22000 });
+    //         await page.waitForSelector(SELECTORS.SEND_BUTTON, { timeout: 22000 });
+    //         await page.keyboard.press("Enter");
+    //         await page.waitFor(1000);
             
-          }
-        } catch (e) {
-          console.error("Error occurred:", e);
-        } finally {
-          await browser.close();
-        }
+    //       }
+    //     } catch (e) {
+    //       console.error("Error occurred:", e);
+    //     } finally {
+    //       await browser.close();
+    //     }
         
         
-      }, 5000)
+    //   }, 5000)
         
-    });
+    // });
 
-      }
-            catch(e){
-              console.log("BIG ERROR: ", e)
-            }
+    //   }
+    //         catch(e){
+    //           console.log("BIG ERROR: ", e)
+    //         }
 
      
 
@@ -258,6 +394,7 @@ console.log("fuck")
 
       //       clients.initialize();
     }
+    
 
     // if Email Message
 
