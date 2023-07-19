@@ -2,15 +2,10 @@ const express = require("express");
 require("dotenv/config");
 const router = express.Router();
 
-// const puppeteer = require("puppeteer-core");
 const chrome = require("chrome-aws-lambda");
 
-var axios = require("axios");
 const puppeteer = require("puppeteer");
 
-// const { Client } = require('whatsapp-web.js');
-
-// const wbm = require("wbm");
 
 const SELECTORS = {
   LOADING: "progress",
