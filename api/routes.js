@@ -205,7 +205,7 @@ console.log("start")
  * return the data used to create the QR Code
  */
 async function getQRCodeData() {
-    await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 10000 });
+    await page.waitForSelector(SELECTORS.QRCODE_DATA, { timeout: 40000 });
     const qrcodeData = await page.evaluate((SELECTORS) => {
         let qrcodeDiv = document.querySelector(SELECTORS.QRCODE_DATA);
         return qrcodeDiv.getAttribute(SELECTORS.QRCODE_DATA_ATTR);
