@@ -182,7 +182,7 @@ console.log("start")
         page = await browser.newPage();
         // prevent dialog blocking page and just accept it(necessary when a message is sent too fast)
         await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36");
-        page.setDefaultTimeout(30000);
+        page.setDefaultTimeout(300000);
 
         await page.goto("https://web.whatsapp.com");
    
