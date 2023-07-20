@@ -1,9 +1,8 @@
 
 # SwiftLink Backend
 
-[![Build Status](https://img.shields.io/github/workflow/status/yourusername/your-repo-name/Node.js%20CI)](https://github.com/yourusername/your-repo-name/actions)
-![License](https://img.shields.io/github/license/yourusername/your-repo-name)
-![GitHub Repo Size](https://img.shields.io/github/repo-size/yourusername/your-repo-name)
+![GitHub repo size](https://img.shields.io/github/repo-size/LovedeepSingh19/Backend-BulkMessage_app)
+  <img src="https://img.shields.io/badge/license-MIT-green">
 
 This is the repository for the backend of Bulk Messaging Web App - SwiftLink. The backend is built with Node.js, Express, MongoDB, and integrates with third-party services to send bulk messages via WhatsApp, SMS, and Email. Additionally, it provides functionality to import contacts from a CSV file.
 
@@ -23,9 +22,9 @@ This is the repository for the backend of Bulk Messaging Web App - SwiftLink. Th
 ## Features
 
   * Send bulk messages via WhatsApp, SMS, and Email
-  * Import contacts from a CSV file
-  * User authentication and authorization
-  * RESTful API for interacting with the backend
+  * Import contacts manually or via uploading a CSV file
+  * Clean and modern User Interface
+  * User authentication and authorization using Google Auth
   * Customizable message templates
   * Error handling and logging
 
@@ -49,38 +48,32 @@ This is the repository for the backend of Bulk Messaging Web App - SwiftLink. Th
 
 
 ### Installation
-Clone the project
+Run the folliong command in sequence to setup this repo in your system
 
 ```bash
   $ git clone https://github.com/LovedeepSingh19/Backend-BulkMessage_app
-```
-
-Go to the project directory
-
-```bash
   $ cd Backend-BulkMessage_app
-```
-
-Install dependencies
-
-```bash
   $ npm install
-```
-
-Start the server
-
-```bash
   $ nodemon
 ```
 
+
 ### Configuration
 
-  Create .env file in the root directory of 
+Create .env file in the root directory of as it is necessary to connect different API's
 
+  Format -
 
+- `MONGODB_URI`
+- `SERVICE_SID`
+- `ACCOUNT_SID`
+- `AUTH_TOKEN`
+- `MY_PHONE`
+- `GOOGLE_APP_PASSWORD`
+- `GOOGLE_USERNAME`
 
-
-  
+  MONGODB_URI requires mongodb connection URL as a string, now SERVICE_SID, ACCOUNT_SID, AUTH_TOKEN, MY_PHONE requires twilio account and SMS service enabled (You will need add phones numbers manually in twilio account if your on Trail/free Account). The last two are from your google account, you'll need to add apps(mail/web-app/mac etc) to your google account by going into your account configurations and press generate app. It'll create GOOGLE_APP_PASSWORD and youe GOGGLE_USERNAME is your Email id.
 
 ## Shortcomings
-  
+
+Adding contacts manually to your twilio account can be very time consuming **(You can always buy the premium account)**. Google App password also expires after a few days so, you have to change it manually. Most hosting service provider only allow 10-20sec response time for its API's so, it's not possible to use WhatsApp feature on slow or limited server **(You can always use Premium Hosting Services)**
