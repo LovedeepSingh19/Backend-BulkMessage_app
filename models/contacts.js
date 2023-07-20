@@ -15,7 +15,6 @@ const newSchema = new Schema({
     },
     phone: {
         type: String,
-        trim: true,
     }
 }); 
 

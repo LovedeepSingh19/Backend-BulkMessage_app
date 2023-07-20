@@ -34,18 +34,18 @@ router.get("/", async (req, res) => {
 
 router.post("/manual-contacts", async (req, res) => {
   const { participants } = req.body;
-  console.log(participants);
 
   try {
     for (const participant of participants) {
       const { email, phone, createdBy } = participant;
-
+      
       const existingContact = await Contact.findOne({
         $and: [{ email }, { createdBy }, { phone }],
       });
-
+      
       if (!existingContact) {
-        await Contact.create(participant);
+        await Contact.create({email: participant.email, createdBy: participant.createdBy, phone: participant.phone, username: participant.username});
+        console.log(email)
       } else {
         console.log("already exists: " + participant.email);
       }
