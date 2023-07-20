@@ -18,6 +18,7 @@ This is the repository for the backend of Bulk Messaging Web App - SwiftLink. Th
 - [Shortcomings](#shortcomings)
 
 ## Hackathon
+Make this project for Provothon after getting shortlisted for initial rounds in the time span of 2 days. It was an online hackathon but the experiance was really great as I've learned a lot of things.
 
 ## Features
 
