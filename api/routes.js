@@ -136,6 +136,7 @@ router.post("/sendMessage", async (req, res) => {
     intersection.map((value) => phoneNumbers.push("+91 " + value.phone));
 
     //If WhatsAPP Message
+    console.log(message)
 
     if (message.whatsApp) {
       start();
@@ -264,15 +265,20 @@ router.post("/sendMessage", async (req, res) => {
         await browser.close();
         console.log(`Result: ${counter.success} sent, ${counter.fails} failed`);
       }
+    }
 
       // if Email Message
 
-      if (message.email) {
+      if(message.email) {
+        console.log('mess', message)
+        try {
+          
+        console.log(message.google_app_password)
         let config = {
           service: "gmail",
           auth: {
-            user: process.env.GOOGLE_USERNAME,
-            pass: process.env.GOOGLE_APP_PASSWORD,
+            user: message.createdBy,
+            pass: message.google_app_password,
           },
         };
 
@@ -288,8 +294,8 @@ router.post("/sendMessage", async (req, res) => {
 
         let response = {
           body: {
-            name: "",
-            intro: "Finally Something is working",
+            name: 'test name',
+            intro: "SwiftLink Message",
             table: {
               data: [{ data: message.body }],
             },
@@ -301,14 +307,14 @@ router.post("/sendMessage", async (req, res) => {
         intersection.map((value) => emails.push(value.email));
 
         try {
-          let message = {
-            from: process.env.GOOGLE_USERNAME,
+          let messages = {
+            from: message.createdBy,
             to: [emails],
             subject: "Bulk Message",
             html: mail,
           };
 
-          await transporter.sendMail(message);
+          await transporter.sendMail(messages);
           console.log(`Email sent to ${emails}`);
 
           res.status(201).json({ msg: "You should receive an email" });
@@ -316,8 +322,11 @@ router.post("/sendMessage", async (req, res) => {
           console.error("Failed to send email:", error);
           res.status(500).json({ error: "Failed to send email" });
         }
+      } catch (error) {
+          console.log('fucked up error', error)
       }
     }
+      
 
     // if SMS
 

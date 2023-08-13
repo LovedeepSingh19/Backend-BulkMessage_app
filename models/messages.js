@@ -23,6 +23,18 @@ const tempSchema = new Schema({
   timeStamp: {
     type: Number,
   },
+  google_app_password: {
+    type: String,
+  },
+  sms_account_sid: {
+    type: String,
+  },
+  sms_auth_token: {
+    type: String,
+  },
+  sms_service_sid: {
+    type: String,
+  }
 });
 
 module.exports = mongoose.model("Messages", tempSchema);
